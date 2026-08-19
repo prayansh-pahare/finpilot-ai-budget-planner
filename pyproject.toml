@@ -1,0 +1,13 @@
+[project]
+name = "finpilot-ai-budget-planner"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "agent-framework>=1.14.0",
+    "agent-framework-ollama>=1.0.0b260813",
+    "mcp[cli]>=1.29.0",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "plotly>=6.9.0",
+    "python-dotenv>=1.2.3",
+]
