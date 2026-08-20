@@ -1,25 +1,32 @@
+import sys
+from pathlib import Path
+
 from mcp.server.fastmcp import FastMCP
 
-import pandas as pd
 
+# Allow MCP server to access our service files.
+SERVICES_DIR = Path(__file__).resolve().parent.parent / "services"
+sys.path.append(str(SERVICES_DIR))
+
+from statement_parser import load_and_categorize_statement
+from subscription_detector import detect_subscriptions as find_subscriptions
+from budget_planner import create_budget as build_budget
+from adaptive_budget import create_adaptive_budget as build_adaptive_budget
+from budget_history import adjust_budget as update_budget
 
 mcp = FastMCP("FinPilot Financial Tools")
 
 
-def load_statement(file_path: str) -> pd.DataFrame:
-    """Load a CSV bank statement."""
-    return pd.read_csv(file_path)
-
-
 @mcp.tool()
 def calculate_savings(income: float, expenses: float) -> dict:
-    """Calculate monthly savings and savings rate."""
+    """Calculate savings and savings rate."""
 
     savings = income - expenses
 
-    savings_rate = 0
     if income > 0:
         savings_rate = (savings / income) * 100
+    else:
+        savings_rate = 0
 
     return {
         "income": income,
@@ -31,115 +38,70 @@ def calculate_savings(income: float, expenses: float) -> dict:
 
 @mcp.tool()
 def analyze_statement(file_path: str) -> dict:
-    """Analyze income, expenses and category spending from a CSV bank statement."""
+    """Analyze a bank statement."""
 
-    df = load_statement(file_path)
+    df = load_and_categorize_statement(file_path)
 
-    credits = df[
+    income = df[
         df["type"].str.upper() == "CREDIT"
-    ]
+    ]["amount"].sum()
 
-    debits = df[
+    expenses = df[
         df["type"].str.upper() == "DEBIT"
-    ]
+    ]["amount"].sum()
 
-    total_income = credits["amount"].sum()
-    total_expenses = debits["amount"].sum()
+    savings = income - expenses
 
-    savings = total_income - total_expenses
+    if income > 0:
+        savings_rate = (savings / income) * 100
+    else:
+        savings_rate = 0
 
-    savings_rate = 0
-    if total_income > 0:
-        savings_rate = (savings / total_income) * 100
+    category_spending = (
+        df[df["type"].str.upper() == "DEBIT"]
+        .groupby("category")["amount"]
+        .sum()
+        .to_dict()
+    )
 
     return {
-        "total_income": float(total_income),
-        "total_expenses": float(total_expenses),
+        "income": float(income),
+        "expenses": float(expenses),
         "savings": float(savings),
         "savings_rate_percent": round(float(savings_rate), 2),
-        "transaction_count": len(df),
+        "category_spending": {
+            key: float(value)
+            for key, value in category_spending.items()
+        },
     }
 
 
 @mcp.tool()
 def detect_subscriptions(file_path: str) -> list:
-    """Detect possible subscriptions from known recurring merchants."""
+    """Detect possible subscriptions in a bank statement."""
 
-    df = load_statement(file_path)
+    result = find_subscriptions(file_path)
 
-    known_subscriptions = [
-        "NETFLIX",
-        "SPOTIFY",
-        "PRIME VIDEO",
-        "YOUTUBE",
-        "GYM",
-        "ADOBE",
-        "MICROSOFT",
-    ]
-
-    debits = df[
-        df["type"].str.upper() == "DEBIT"
-    ].copy()
-
-    debits["description_upper"] = (
-        debits["description"]
-        .astype(str)
-        .str.upper()
-    )
-
-    results = []
-
-    for merchant in known_subscriptions:
-
-        matches = debits[
-            debits["description_upper"]
-            .str.contains(merchant, na=False)
-        ]
-
-        if not matches.empty:
-            results.append(
-                {
-                    "merchant": merchant,
-                    "times_charged": len(matches),
-                    "total_spent": float(matches["amount"].sum()),
-                    "average_charge": round(
-                        float(matches["amount"].mean()),
-                        2,
-                    ),
-                }
-            )
-
-    return results
+    return result.to_dict(orient="records")
 
 
 @mcp.tool()
 def create_budget(file_path: str) -> dict:
-    """Create a simple starting budget from a bank statement."""
+    """Create a suggested budget from a bank statement."""
 
-    df = load_statement(file_path)
+    return build_budget(file_path)
 
-    credits = df[
-        df["type"].str.upper() == "CREDIT"
-    ]
+@mcp.tool()
+def create_adaptive_budget(file_path: str) -> dict:
+    """Create an adaptive monthly budget from historical bank statement data."""
 
-    debits = df[
-        df["type"].str.upper() == "DEBIT"
-    ]
+    return build_adaptive_budget(file_path)
 
-    total_income = float(credits["amount"].sum())
-    total_expenses = float(debits["amount"].sum())
+@mcp.tool()
+def adjust_budget(file_path: str) -> dict:
+    """Update the budget and compare it with the previously saved budget."""
 
-    current_savings = total_income - total_expenses
-
-    return {
-        "monthly_income": total_income,
-        "current_expenses": total_expenses,
-        "current_savings": current_savings,
-        "suggested_needs_budget": round(total_income * 0.50, 2),
-        "suggested_wants_budget": round(total_income * 0.30, 2),
-        "suggested_savings_budget": round(total_income * 0.20, 2),
-    }
-
+    return update_budget(file_path)
 
 if __name__ == "__main__":
     mcp.run()

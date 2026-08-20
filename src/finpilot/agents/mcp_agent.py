@@ -58,17 +58,25 @@ async def main():
 
         result = await agent.run(
             """
-Analyze the bank statement located at:
+        Analyze the bank statement located at:
 
-data/sample_statement.csv
+        data/sample_statement.csv
 
-Please:
-1. Analyze income and expenses.
-2. Calculate savings and savings rate.
-3. Identify possible subscriptions.
-4. Create a suggested starting budget.
-5. Give me a short financial summary.
-"""
+        Create an adaptive monthly budget for me.
+
+        Please tell me:
+
+        1. How many months were analyzed.
+        2. My average monthly income.
+        3. My average monthly expenses.
+        4. My average monthly savings.
+        5. My savings target.
+        6. Whether I am currently on track.
+        7. If I am not on track, tell me which spending
+        categories I should reduce.
+
+        Use the adaptive budget MCP tool for the calculations.
+        """
         )
 
         print(result)

@@ -1,0 +1,29 @@
+{
+    "months_analyzed": 3,
+    "average_monthly_income": 60000.0,
+    "average_monthly_expenses": 26574.67,
+    "average_monthly_savings": 33425.33,
+    "targets": {
+        "needs": 30000.0,
+        "wants": 18000.0,
+        "savings": 12000.0
+    },
+    "savings_target": 12000.0,
+    "savings_gap": -21425.33,
+    "on_track": true,
+    "average_category_spending": {
+        "Entertainment": 768.0,
+        "Food": 1540.0,
+        "Health & Fitness": 1500.0,
+        "Housing": 18000.0,
+        "Shopping": 2433.33,
+        "Transport": 383.33,
+        "Utilities": 1950.0
+    },
+    "adjustment_suggestions": [],
+    "version": 3,
+    "changes_from_previous": [
+        "Average monthly expenses did not change.",
+        "Average monthly savings did not change."
+    ]
+}
