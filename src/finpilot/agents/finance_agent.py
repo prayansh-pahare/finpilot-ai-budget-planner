@@ -11,10 +11,7 @@ from agent_framework import MCPStdioTool
 import sys
 from pathlib import Path
 
-OBSERVABILITY_DIR = (
-    Path(__file__).resolve().parent.parent
-    / "observability"
-)
+OBSERVABILITY_DIR = (Path(__file__).resolve().parent.parent / "observability")
 
 sys.path.append(str(OBSERVABILITY_DIR))
 
