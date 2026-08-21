@@ -63,7 +63,6 @@ finpilot-ai-budget-planner/
 │       └── ui/
 │           └── gradio_app.py
 │
-├── tests/
 ├── .env
 ├── .gitignore
 ├── pyproject.toml
