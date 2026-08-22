@@ -21,9 +21,8 @@
         "Utilities": 1950.0
     },
     "adjustment_suggestions": [],
-    "version": 3,
+    "version": 1,
     "changes_from_previous": [
-        "Average monthly expenses did not change.",
-        "Average monthly savings did not change."
+        "This is your first saved budget."
     ]
 }
