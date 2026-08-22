@@ -3,8 +3,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-
-# Allow MCP server to access our service files.
+# Allow MCP server to access the service files.
 SERVICES_DIR = Path(__file__).resolve().parent.parent / "services"
 sys.path.append(str(SERVICES_DIR))
 
@@ -15,7 +14,6 @@ from adaptive_budget import create_adaptive_budget as build_adaptive_budget
 from budget_history import adjust_budget as update_budget
 
 mcp = FastMCP("FinPilot Financial Tools")
-
 
 @mcp.tool()
 def calculate_savings(income: float, expenses: float) -> dict:
@@ -34,7 +32,6 @@ def calculate_savings(income: float, expenses: float) -> dict:
         "savings": savings,
         "savings_rate_percent": round(savings_rate, 2),
     }
-
 
 @mcp.tool()
 def analyze_statement(file_path: str) -> dict:
@@ -75,7 +72,6 @@ def analyze_statement(file_path: str) -> dict:
         },
     }
 
-
 @mcp.tool()
 def detect_subscriptions(file_path: str) -> list:
     """Detect possible subscriptions in a bank statement."""
@@ -83,7 +79,6 @@ def detect_subscriptions(file_path: str) -> list:
     result = find_subscriptions(file_path)
 
     return result.to_dict(orient="records")
-
 
 @mcp.tool()
 def create_budget(file_path: str) -> dict:

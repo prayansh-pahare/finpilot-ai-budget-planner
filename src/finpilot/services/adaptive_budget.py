@@ -1,7 +1,5 @@
 import pandas as pd
-
 from statement_parser import load_and_categorize_statement
-
 
 def create_adaptive_budget(file_path: str) -> dict:
     """Create an adaptive monthly budget based on historical spending."""

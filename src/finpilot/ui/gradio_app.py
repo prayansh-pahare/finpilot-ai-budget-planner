@@ -5,11 +5,7 @@ import plotly.express as px
 import sys
 from pathlib import Path
 
-
-# -------------------------------------------------
-# Allow Gradio to access FinPilot services & agents
-# -------------------------------------------------
-
+# Dir of FinPilot services & agents
 FINPILOT_DIR = Path(__file__).resolve().parent.parent
 
 SERVICES_DIR = FINPILOT_DIR / "services"
@@ -18,35 +14,22 @@ AGENTS_DIR = FINPILOT_DIR / "agents"
 sys.path.append(str(SERVICES_DIR))
 sys.path.append(str(AGENTS_DIR))
 
-
-# -------------------------------------------------
 # Import FinPilot features
-# -------------------------------------------------
-
 from statement_parser import load_and_categorize_statement
 from subscription_detector import detect_subscriptions
 from spending_patterns import calculate_daily_spending
 from adaptive_budget import create_adaptive_budget
 from finance_agent import run_finpilot
 
-
 # =================================================
-# RIGHT SIDE
 # BANK STATEMENT DASHBOARD
 # =================================================
 
 def analyze_statement_dashboard(statement):
-    """
-    Analyze the uploaded bank statement and update
-    the financial dashboard.
-    """
+    """Analyze the uploaded bank statement and update the financial dashboard."""
 
-    # ---------------------------------------------
     # No file uploaded
-    # ---------------------------------------------
-
     if statement is None:
-
         return (
             "₹0",
             "₹0",
@@ -58,16 +41,10 @@ def analyze_statement_dashboard(statement):
             "Please upload a bank statement.",
         )
 
-    # ---------------------------------------------
     # Try reading the statement
-    # ---------------------------------------------
-
     try:
-
         df = load_and_categorize_statement(statement)
-
     except Exception as error:
-
         return (
             "₹0",
             "₹0",
@@ -84,60 +61,33 @@ def analyze_statement_dashboard(statement):
             ),
         )
 
-    # ---------------------------------------------
     # Total Income
-    # ---------------------------------------------
-
     income = df[
         df["type"].str.upper() == "CREDIT"
     ]["amount"].sum()
 
-    # ---------------------------------------------
     # Total Expenses
-    # ---------------------------------------------
-
     expenses = df[
         df["type"].str.upper() == "DEBIT"
     ]["amount"].sum()
 
-    # ---------------------------------------------
     # Total Savings
-    # ---------------------------------------------
-
     savings = income - expenses
 
-    # ---------------------------------------------
     # Savings Rate
-    # ---------------------------------------------
-
     if income > 0:
-
-        savings_rate = (
-            savings / income
-        ) * 100
-
+        savings_rate = (savings / income) * 100
     else:
-
         savings_rate = 0
-
-    # ---------------------------------------------
+        
     # Convert numbers to display text
-    # ---------------------------------------------
-
     income_text = f"₹{income:,.2f}"
-
     expenses_text = f"₹{expenses:,.2f}"
-
     savings_text = f"₹{savings:,.2f}"
+    savings_rate_text = (f"{savings_rate:.2f}%")
 
-    savings_rate_text = (
-        f"{savings_rate:.2f}%"
-    )
 
-    # =============================================
     # Spending By Category
-    # =============================================
-
     expense_df = df[
         df["type"].str.upper() == "DEBIT"
     ]

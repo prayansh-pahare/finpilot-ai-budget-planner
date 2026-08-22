@@ -3,27 +3,22 @@ from pathlib import Path
 
 from adaptive_budget import create_adaptive_budget
 
-
 HISTORY_FILE = Path("data/budget_history.json")
-
 
 def adjust_budget(file_path: str) -> dict:
     """Create a budget and compare it with the previous saved budget."""
 
     # Create the latest budget
     current_budget = create_adaptive_budget(file_path)
-
     previous_budget = None
 
     # Check whether an older budget exists
     if HISTORY_FILE.exists():
-
         with open(HISTORY_FILE, "r") as file:
             previous_budget = json.load(file)
 
     # Start with version 1
     version = 1
-
     if previous_budget:
         version = previous_budget.get("version", 0) + 1
 
@@ -32,7 +27,6 @@ def adjust_budget(file_path: str) -> dict:
     # ----------------------------------------
     # Compare current and previous budgets
     # ----------------------------------------
-
     changes = []
 
     if previous_budget:
