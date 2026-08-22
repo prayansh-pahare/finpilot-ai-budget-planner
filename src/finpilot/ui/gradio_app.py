@@ -7,7 +7,6 @@ from pathlib import Path
 
 # Dir of FinPilot services & agents
 FINPILOT_DIR = Path(__file__).resolve().parent.parent
-
 SERVICES_DIR = FINPILOT_DIR / "services"
 AGENTS_DIR = FINPILOT_DIR / "agents"
 
@@ -21,12 +20,18 @@ from spending_patterns import calculate_daily_spending
 from adaptive_budget import create_adaptive_budget
 from finance_agent import run_finpilot
 
+# Store current statement and MAF session
+current_statement = None
+finpilot_session = None
+
 # =================================================
 # BANK STATEMENT DASHBOARD
 # =================================================
 
 def analyze_statement_dashboard(statement):
     """Analyze the uploaded bank statement and update the financial dashboard."""
+
+    global current_statement
 
     # No file uploaded
     if statement is None:
@@ -40,6 +45,8 @@ def analyze_statement_dashboard(statement):
             pd.DataFrame(),
             "Please upload a bank statement.",
         )
+
+    current_statement = statement
 
     # Try reading the statement
     try:
@@ -106,13 +113,8 @@ def analyze_statement_dashboard(statement):
         title="Spending by Category",
     )
 
-    # =============================================
     # Spending Trend
-    # =============================================
-
-    daily_spending = calculate_daily_spending(
-        statement
-    )
+    daily_spending = calculate_daily_spending(statement)
 
     trend_chart = px.line(
         daily_spending,
@@ -127,73 +129,35 @@ def analyze_statement_dashboard(statement):
         yaxis_title="Amount Spent",
     )
 
-    # =============================================
     # Subscription Detection
-    # =============================================
+    subscriptions_table = detect_subscriptions(statement)
 
-    subscriptions_table = detect_subscriptions(
-        statement
-    )
-
-    # =============================================
     # Adaptive Budget
-    # =============================================
-
-    budget = create_adaptive_budget(
-        statement
-    )
+    budget = create_adaptive_budget(statement)
 
     budget_summary = (
-        f"Months analyzed: "
-        f"{budget['months_analyzed']}\n\n"
-
-        f"Average monthly income: "
-        f"₹{budget['average_monthly_income']:,.2f}\n"
-
-        f"Average monthly expenses: "
-        f"₹{budget['average_monthly_expenses']:,.2f}\n"
-
-        f"Average monthly savings: "
-        f"₹{budget['average_monthly_savings']:,.2f}\n\n"
-
-        f"Savings target: "
-        f"₹{budget['savings_target']:,.2f}\n"
-
-        f"On track: "
-        f"{budget['on_track']}"
+        f"Months analyzed: {budget['months_analyzed']}\n\n"
+        f"Average monthly income: ₹{budget['average_monthly_income']:,.2f}\n"
+        f"Average monthly expenses: ₹{budget['average_monthly_expenses']:,.2f}\n"
+        f"Average monthly savings: ₹{budget['average_monthly_savings']:,.2f}\n\n"
+        f"Savings target: ₹{budget['savings_target']:,.2f}\n"
+        f"On track: {budget['on_track']}"
     )
 
-    # ---------------------------------------------
     # Add adjustment suggestions
-    # ---------------------------------------------
-
     if budget["adjustment_suggestions"]:
+        budget_summary += ("\n\nSuggested Adjustments:\n")
 
-        budget_summary += (
-            "\n\nSuggested Adjustments:\n"
-        )
-
-        for suggestion in (
-            budget["adjustment_suggestions"]
-        ):
-
+        for suggestion in (budget["adjustment_suggestions"]):
             budget_summary += (
-                f"\n• {suggestion['category']}: "
-                f"reduce approximately "
-                f"₹{suggestion['suggested_reduction']:,.2f}"
+                f"\n• {suggestion['category']}: reduce approximately ₹{suggestion['suggested_reduction']:,.2f}"
             )
-
     else:
-
         budget_summary += (
-            "\n\nNo spending reductions are required "
-            "to meet the current savings target."
+            "\n\nNo spending reductions are required to meet the current savings target."
         )
-
-    # ---------------------------------------------
+        
     # Return dashboard values
-    # ---------------------------------------------
-
     return (
         income_text,
         expenses_text,
@@ -207,191 +171,64 @@ def analyze_statement_dashboard(statement):
 
 
 # =================================================
-# LEFT SIDE
-# AI CHAT
+# AI CHAT FUNCTION
 # =================================================
 
-def chat_with_finpilot(
-    message,
-    history,
-    statement,
-    agent_session,
-):
-    """
-    Send the user's message to FinPilot and display
-    the response in the same conversation window.
-    """
+def chat_with_finpilot(message, history):
+    """Send the user's message to FinPilot and display the response in the same conversation window."""
 
-    # ---------------------------------------------
+    global finpilot_session
+    global current_statement
+
     # Ignore empty messages
-    # ---------------------------------------------
-
     if not message or not message.strip():
+        return ""
 
-        return "", history, agent_session
-
-    # ---------------------------------------------
-    # Make sure chat history exists
-    # ---------------------------------------------
-
-    if history is None:
-
-        history = []
-
-    # ---------------------------------------------
-    # Add user's message
-    # ---------------------------------------------
-
-    history.append(
-        {
-            "role": "user",
-            "content": message,
-        }
-    )
-
-    # ---------------------------------------------
     # Ask FinPilot Agent
-    # ---------------------------------------------
-
     try:
-
-        ai_response, agent_session = run_finpilot(
+        ai_response, finpilot_session = run_finpilot(
             message,
-            statement,
-            agent_session,
+            current_statement,
+            finpilot_session,
         )
-
+        return ai_response
+    
     except Exception as error:
-
-        ai_response = (
+        return (
             "Sorry, I could not process your request.\n\n"
             f"Technical details: {error}"
         )
-
-    # ---------------------------------------------
-    # Add FinPilot response
-    # ---------------------------------------------
-
-    history.append(
-        {
-            "role": "assistant",
-            "content": ai_response,
-        }
-    )
-
-    # ---------------------------------------------
-    # Clear textbox and update conversation
-    # ---------------------------------------------
-
-    return "", history, agent_session
-
-# =================================================
-# CLEAR CHAT
-# =================================================
-
-def clear_chat():
-    """Clear the visible chat and start a fresh MAF session."""
-
-    return [], None
-
 
 # =================================================
 # GRADIO USER INTERFACE
 # =================================================
 
-with gr.Blocks(
-    title="FinPilot AI Budget Planner"
-) as app:
-
-    # Stores the Microsoft Agent Framework session for this Gradio user.
-    # It allows FinPilot to remember earlier turns in the same conversation.
-    agent_session = gr.State(value=None)
-
-    # -------------------------------------------------
+with gr.Blocks(title="FinPilot AI Budget Planner") as app:
     # Main Heading
-    # -------------------------------------------------
-
-    gr.Markdown(
-        """
-        # 💰 FinPilot AI Budget Planner
-
-        ### Agentic AI Personal Finance Assistant
-
-        Chat with FinPilot on the left and analyze your
-        bank statement on the right.
-        """
-    )
-
-    # =================================================
-    # MAIN TWO-COLUMN LAYOUT
-    # =================================================
+    gr.Markdown("""# FinPilot - Agentic AI Personal Finance Assistant""")
 
     with gr.Row():
-
-        # =============================================
-        # LEFT SIDE - CHAT
-        # =============================================
-
         with gr.Column(scale=1):
+            gr.Markdown("""Ask questions or your uploaded bank statement.""")
 
-            gr.Markdown(
-                "## 🤖 Chat with FinPilot"
+            gr.ChatInterface(
+                fn=chat_with_finpilot,
+                # chatbot=gr.Chatbot(
+                #     label="FinPilot Conversation",
+                #     height=300,
+                # ),
             )
-
-            gr.Markdown(
-                """
-                Ask questions about budgeting, savings,
-                spending, subscriptions or your uploaded
-                bank statement.
-                """
-            )
-
-            chatbot = gr.Chatbot(
-                # fn=chat_with_finpilot,
-                label="FinPilot Conversation",
-                height=300,
-            )
-
-            chat_input = gr.Textbox(
-                label="Your Message",
-                placeholder=(
-                    "Example: Analyze my spending and "
-                    "tell me how I can save more money."
-                ),
-                lines=2,
-            )
-
-            with gr.Row():
-
-                send_button = gr.Button(
-                    "💬 Send",
-                    variant="primary",
-                )
-
-                clear_button = gr.Button(
-                    "🗑️ Clear Chat"
-                )
-
-            # -----------------------------------------
+            
             # Subscriptions
-            # -----------------------------------------
-
-            gr.Markdown(
-                "### 🔁 Recurring Subscriptions"
-            )
+            gr.Markdown("### Recurring Subscriptions")
 
             subscription_output = gr.Dataframe(
                 label="Detected Subscriptions",
                 interactive=False,
             )
 
-            # -----------------------------------------
             # Adaptive Budget
-            # -----------------------------------------
-
-            gr.Markdown(
-                "### 🎯 Adaptive Budget"
-            )
+            gr.Markdown("### Adaptive Budget")
 
             budget_output = gr.Textbox(
                 label="Budget Analysis",
@@ -399,20 +236,11 @@ with gr.Blocks(
                 interactive=False,
             )
             
-        # =============================================
-        # RIGHT SIDE - FINANCIAL DASHBOARD
-        # =============================================
-
+        # FINANCIAL DASHBOARD
         with gr.Column(scale=1):
+            gr.Markdown("## Financial Dashboard")
 
-            gr.Markdown(
-                "## 📊 Financial Dashboard"
-            )
-
-            # -----------------------------------------
             # CSV Upload
-            # -----------------------------------------
-
             statement_input = gr.File(
                 label="Upload Bank Statement",
                 file_types=[".csv"],
@@ -421,87 +249,58 @@ with gr.Blocks(
             )
 
             analyze_button = gr.Button(
-                "🔍 Analyze Statement",
+                "Analyze Statement",
                 variant="primary",
             )
 
-            # -----------------------------------------
             # Financial Overview
-            # -----------------------------------------
-
-            gr.Markdown(
-                "### 💵 Financial Overview"
-            )
+            gr.Markdown("### Financial Overview")
 
             with gr.Row():
-
                 income_output = gr.Textbox(
                     label="Total Income",
                     value="₹0",
                     interactive=False,
                 )
-
                 expenses_output = gr.Textbox(
                     label="Total Expense",
                     value="₹0",
                     interactive=False,
                 )
-
             with gr.Row():
-
                 savings_output = gr.Textbox(
                     label="Total Saving",
                     value="₹0",
                     interactive=False,
                 )
-
                 savings_rate_output = gr.Textbox(
                     label="Saving Rate",
                     value="0%",
                     interactive=False,
                 )
 
-            # -----------------------------------------
             # Spending Pie Chart
-            # -----------------------------------------
-
-            gr.Markdown(
-                "### 🥧 Spending by Category"
-            )
+            gr.Markdown("### Spending by Category")
 
             spending_chart = gr.Plot(
                 label="Spending by Category"
             )
 
-            # -----------------------------------------
             # Spending Trend
-            # -----------------------------------------
-
-            gr.Markdown(
-                "### 📈 Spending Trend"
-            )
+            gr.Markdown("### Spending Trend")
 
             trend_chart = gr.Plot(
                 label="Daily Spending Trend"
             )
 
-            
-
     # =================================================
-    # EVENTS
+    # CLICK EVENTS - Analyze bank statement
     # =================================================
-
-    # -------------------------------------------------
-    # Analyze bank statement
-    # -------------------------------------------------
-
     analyze_button.click(
         fn=analyze_statement_dashboard,
-
         inputs=[
             statement_input,
         ],
-
         outputs=[
             income_output,
             expenses_output,
@@ -513,62 +312,6 @@ with gr.Blocks(
             budget_output,
         ],
     )
-
-    # -------------------------------------------------
-    # Send chat message using button
-    # -------------------------------------------------
-
-    send_button.click(
-        fn=chat_with_finpilot,
-
-        inputs=[
-            chat_input,
-            chatbot,
-            statement_input,
-            agent_session,
-        ],
-
-        outputs=[
-            chat_input,
-            chatbot,
-            agent_session,
-        ],
-    )
-
-    # -------------------------------------------------
-    # Press Enter to send chat message
-    # -------------------------------------------------
-
-    chat_input.submit(
-        fn=chat_with_finpilot,
-
-        inputs=[
-            chat_input,
-            chatbot,
-            statement_input,
-            agent_session,
-        ],
-
-        outputs=[
-            chat_input,
-            chatbot,
-            agent_session,
-        ],
-    )
-
-    # -------------------------------------------------
-    # Clear Chat
-    # -------------------------------------------------
-
-    clear_button.click(
-        fn=clear_chat,
-        inputs=[],
-        outputs=[
-            chatbot,
-            agent_session,
-        ],
-    )
-
 
 # =================================================
 # START APPLICATION
