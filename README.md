@@ -40,9 +40,8 @@ finpilot-ai-budget-planner/
 │   └── finpilot/
 │       │
 │       ├── agents/
-│       │   ├── first_agent.py
 │       │   ├── mcp_agent.py
-│       │   └── finance_agent.py
+│       │   └── first_agent_test.py
 │       │
 │       ├── mcp/
 │       │   └── server.py
@@ -63,7 +62,7 @@ finpilot-ai-budget-planner/
 │       └── ui/
 │           └── gradio_app.py
 │
-├── .env
+├── .env.example
 ├── .gitignore
 ├── pyproject.toml
 ├── uv.lock

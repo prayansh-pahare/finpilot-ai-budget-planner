@@ -155,8 +155,9 @@ def create_adaptive_budget(file_path: str) -> dict:
 
                 # Calculate how much FinPilot
                 # suggests reducing
-                suggested_reduction = (
-                    savings_gap * share
+                suggested_reduction = min(
+                    savings_gap * share,
+                    amount,
                 )
 
                 # Do not allow a negative target

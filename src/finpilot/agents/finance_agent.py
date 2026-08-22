@@ -24,8 +24,9 @@ load_dotenv()
 async def ask_finpilot(
     user_message: str,
     statement_path: str | None = None,
-) -> str:
-    """Ask the FinPilot AI agent a financial question."""
+    session=None,
+):
+    """Ask the FinPilot AI agent a financial question using a reusable MAF session."""
 
     api_key = os.getenv("OLLAMA_API_KEY")
     host = os.getenv("OLLAMA_HOST")
@@ -70,42 +71,54 @@ async def ask_finpilot(
             tools=[mcp_tool],
         )
 
+        # Create a new Microsoft Agent Framework session only for
+        # the first message. The same session is reused for later turns.
+        if session is None:
+            session = agent.create_session()
+
         if statement_path:
             final_prompt = f"""
-        The user uploaded a bank statement located at:
+The user currently has a bank statement uploaded at:
 
-        {statement_path}
+{statement_path}
 
-        Use the available MCP tools to analyze this statement when
-        needed.
+Use the available MCP tools to analyze this statement when needed.
+Do not analyze the file unless it is relevant to the user's request.
 
-        User's request:
+User's request:
 
-        {user_message}
-        """
+{user_message}
+"""
         else:
             final_prompt = user_message
 
-        result = await agent.run(final_prompt)
+        result = await agent.run(
+            final_prompt,
+            session=session,
+        )
 
-        return str(result)
+        return str(result), session
 
 
 def run_finpilot(
     user_message: str,
     statement_path: str | None = None,
-) -> str:
+    session=None,
+):
+    """Run FinPilot and return both the answer and reusable MAF session."""
 
     return asyncio.run(
         ask_finpilot(
             user_message,
             statement_path,
+            session,
         )
     )
 
+
 if __name__ == "__main__":
 
-    answer = run_finpilot(
+    answer, session = run_finpilot(
         "I earn 60000 rupees per month and spend "
         "45000 rupees. How much am I saving?"
     )

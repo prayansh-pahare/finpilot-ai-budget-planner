@@ -6,7 +6,7 @@ def categorize_transaction(description: str) -> dict:
     category_rules = {
         "Income": [
             "SALARY",
-            "SALARY CREDIT",
+            "CREDIT",
         ],
         "Housing": [
             "RENT",
@@ -32,6 +32,9 @@ def categorize_transaction(description: str) -> dict:
             "ELECTRICITY",
             "WATER BILL",
             "GAS BILL",
+            "MOBILE RECHARGE",
+            "PHONE BILL",
+            "INTERNET",
         ],
         "Entertainment": [
             "NETFLIX",
@@ -42,6 +45,17 @@ def categorize_transaction(description: str) -> dict:
             "GYM",
             "PHARMACY",
             "HOSPITAL",
+        ],
+        "Groceries": [
+            "GROCERY",
+            "SUPERMARKET",
+        ],
+        "Vacation & Travel": [
+            "HOTEL",
+            "AIRLINE",
+            "TRAVEL",
+            "TOUR",
+            "VACATION",
         ],
     }
 

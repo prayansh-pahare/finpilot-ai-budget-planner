@@ -265,6 +265,7 @@ def chat_with_finpilot(
     message,
     history,
     statement,
+    agent_session,
 ):
     """
     Send the user's message to FinPilot and display
@@ -277,7 +278,7 @@ def chat_with_finpilot(
 
     if not message or not message.strip():
 
-        return "", history
+        return "", history, agent_session
 
     # ---------------------------------------------
     # Make sure chat history exists
@@ -304,9 +305,10 @@ def chat_with_finpilot(
 
     try:
 
-        ai_response = run_finpilot(
+        ai_response, agent_session = run_finpilot(
             message,
             statement,
+            agent_session,
         )
 
     except Exception as error:
@@ -331,16 +333,16 @@ def chat_with_finpilot(
     # Clear textbox and update conversation
     # ---------------------------------------------
 
-    return "", history
+    return "", history, agent_session
 
 # =================================================
 # CLEAR CHAT
 # =================================================
 
 def clear_chat():
-    """Clear FinPilot conversation."""
+    """Clear the visible chat and start a fresh MAF session."""
 
-    return []
+    return [], None
 
 
 # =================================================
@@ -350,6 +352,10 @@ def clear_chat():
 with gr.Blocks(
     title="FinPilot AI Budget Planner"
 ) as app:
+
+    # Stores the Microsoft Agent Framework session for this Gradio user.
+    # It allows FinPilot to remember earlier turns in the same conversation.
+    agent_session = gr.State(value=None)
 
     # -------------------------------------------------
     # Main Heading
@@ -569,11 +575,13 @@ with gr.Blocks(
             chat_input,
             chatbot,
             statement_input,
+            agent_session,
         ],
 
         outputs=[
             chat_input,
             chatbot,
+            agent_session,
         ],
     )
 
@@ -588,11 +596,13 @@ with gr.Blocks(
             chat_input,
             chatbot,
             statement_input,
+            agent_session,
         ],
 
         outputs=[
             chat_input,
             chatbot,
+            agent_session,
         ],
     )
 
@@ -605,6 +615,7 @@ with gr.Blocks(
         inputs=[],
         outputs=[
             chatbot,
+            agent_session,
         ],
     )
 
