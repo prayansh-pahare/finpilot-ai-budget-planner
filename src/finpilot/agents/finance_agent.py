@@ -62,6 +62,7 @@ async def ask_finpilot(user_message: str, statement_path: str | None = None, ses
                 "Explain financial information in simple language. "
                 "Treat detected subscriptions as possible subscriptions, "
                 "not automatically unnecessary expenses."
+                "Use Indian Rupees (INR) as the currency for all financial calculations."
             ),
             tools=[mcp_tool],
         )
