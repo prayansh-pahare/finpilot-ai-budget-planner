@@ -12,14 +12,12 @@ import sys
 from pathlib import Path
 
 OBSERVABILITY_DIR = (Path(__file__).resolve().parent.parent / "observability")
-
 sys.path.append(str(OBSERVABILITY_DIR))
 
-from telemetry import setup_observability
-
-setup_observability()
 load_dotenv()
 
+from telemetry import setup_observability
+setup_observability()
 
 async def ask_finpilot(user_message: str, statement_path: str | None = None, session=None):
     """Ask the FinPilot AI agent a financial question using a reusable MAF session."""

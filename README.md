@@ -40,7 +40,7 @@ finpilot-ai-budget-planner/
 │   └── finpilot/
 │       │
 │       ├── agents/
-│       │   ├── mcp_agent.py
+│       │   ├── finance_agent.py
 │       │   └── first_agent_test.py
 │       │
 │       ├── mcp/

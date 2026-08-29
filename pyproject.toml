@@ -6,6 +6,7 @@ dependencies = [
     "agent-framework>=1.14.0",
     "agent-framework-ollama>=1.0.0b260813",
     "gradio>=6.24.0",
+    "langfuse>=4.15.1",
     "mcp[cli]>=1.29.0",
     "openpyxl>=3.1.5",
     "opentelemetry-sdk>=1.43.0",
