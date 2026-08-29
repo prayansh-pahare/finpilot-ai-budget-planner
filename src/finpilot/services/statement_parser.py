@@ -20,8 +20,8 @@ def load_and_categorize_statement(file_path):
 
     categories = df["description"].apply(categorize_transaction)
 
-    df["category"] = categories.apply(lambda x: x[0])
-    df["confidence"] = categories.apply(lambda x: x[1])
+    df["category"] = categories.apply(lambda x: x["category"])
+    df["confidence"] = categories.apply(lambda x: x["confidence"])
 
     return df
 
