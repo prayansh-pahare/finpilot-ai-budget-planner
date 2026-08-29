@@ -1,3 +1,4 @@
+import os
 import gradio as gr
 import pandas as pd
 import plotly.express as px
@@ -318,5 +319,9 @@ with gr.Blocks(title="FinPilot AI Budget Planner") as app:
 # =================================================
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 7860))
 
-    app.launch()
+    app.launch(
+        server_name="0.0.0.0",
+        server_port=port
+    )
