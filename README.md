@@ -178,7 +178,8 @@ It shows the agent making an LLM call, invoke an MCP tool, observe its result, a
 
 A sample FinPilot agent execution can be viewed here:
 
-[View FinPilot Langfuse Trace](https://us.cloud.langfuse.com/project/cmt3wctb608baad0deev3axbc/traces/a6be3f2b36027fca5e36ac7aeaf50289)
+[View FinPilot Langfuse Sample Trace 1](https://us.cloud.langfuse.com/project/cmt3wctb608baad0deev3axbc/traces/a6be3f2b36027fca5e36ac7aeaf50289)
+[View FinPilot Langfuse Sample Trace 2](https://us.cloud.langfuse.com/project/cmt3wctb608baad0deev3axbc/traces/f97b4099e1a8b2979d9483b30806bacf)
 
 > The public trace uses synthetic financial data and does not contain real banking information.
 
