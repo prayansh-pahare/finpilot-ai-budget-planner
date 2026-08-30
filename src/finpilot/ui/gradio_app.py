@@ -204,7 +204,7 @@ def chat_with_finpilot(message, history):
 # GRADIO USER INTERFACE
 # =================================================
 
-with gr.Blocks(title="FinPilot AI Budget Planner") as app:
+with gr.Blocks(title="FinPilot - Agentic AI Personal Finance Assistant") as app:
     # Main Heading
     gr.Markdown("""# FinPilot - Agentic AI Personal Finance Assistant""")
 
